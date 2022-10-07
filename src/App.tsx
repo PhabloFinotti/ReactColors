@@ -1,13 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
+import { ArrowClockwise } from 'phosphor-react';
+import classNames from 'classnames';
+import { pickTextColorBasedOnBgColorSimple } from './helpers/helper';
 
 function App() {
   const MAX_ALTERNATIVES = 3;
   const [currentColors, setCurrentColors] = useState<string[]>([]);
-  const [selectedColor, setSelectedColor] = useState('');
-  const [isVictory, setIsVictory] = useState(false);
-  const generateColor = () => '#' + Math.floor(Math.random()*16777215).toString(16);
-  const randomNumber = () => Math.floor(Math.random() * (MAX_ALTERNATIVES))
+  const [selectedColor, setSelectedColor] = useState<string>('');
+  const [isVictory, setIsVictory] = useState<boolean>(false);
   const colorPanel = useRef<HTMLDivElement>(null);
+  const generateColor = () => {
+    let randomHex = ('0' + Math.floor(Math.random()*16777215).toString(16)).slice(-6)
+    return '#' + randomHex; 
+  };
+  const randomNumber = () => Math.floor(Math.random() * (MAX_ALTERNATIVES))
 
   const declareRandomColors = (MAX_ALTERNATIVES: number = 3) => {
     setCurrentColors([])
@@ -22,42 +28,51 @@ function App() {
       return;
     }
 
-    setIsVictory(true);
-    setTimeout(() => {
-      correctAnswer();
-    }, 1000)
+    console.log(e)
+
     e.target.classList.add('bg-green-500')
+    setIsVictory(true);
   }
 
-  function correctAnswer(){
+  function restartGame(){
     declareRandomColors();
     setIsVictory(false);
   }
   
   useEffect(() => {
-    if(currentColors.length == 0){
-      declareRandomColors();
-    }
+    declareRandomColors();
   }, [])
   
   useEffect(() => {
     setSelectedColor(currentColors[randomNumber()])
-    console.log(selectedColor)
-  }, currentColors)
+  }, [currentColors])
 
 
   return (
-    <main className="w-screen h-screen bg-neutral-50 flex justify-center items-center">
+    <main 
+      className={ classNames("w-screen h-screen bg-gray-200 flex justify-center items-center", {
+        'cursor-pointer': isVictory,
+      })}
+      onClick={isVictory ? () => restartGame() : undefined}
+      title={isVictory ? 'Clique para Reiniciar o Jogo' : 'Tente adivinhar a cor!'}
+    >
       <section className="bg-white p-5 rounded-xl shadow-lg">
         <div className="flex flex-col justify-center text-center">
-          <div className="text-2xl font-bold">{isVictory ? 'Parabéns!!!' : 'Escolha a cor correta'}</div>
-          <span className="h-72 w-96 my-4" ref={colorPanel} style={{backgroundColor: selectedColor}} data-color={selectedColor}></span>
+          <div className="text-2xl font-bold">{isVictory ? 'Parabéns!' : 'Escolha a cor correta'}</div>
+          <span 
+            className="h-72 w-96 my-4 flex justify-center items-center font-bold text-3xl" 
+            ref={colorPanel} 
+            style={{backgroundColor: selectedColor}} 
+            data-color={selectedColor}
+          >
+            {isVictory ? <ArrowClockwise size={100} color={pickTextColorBasedOnBgColorSimple(selectedColor)} weight="bold" /> : ''}
+          </span>
           <div className="flex-1 py-4">
             <div className="flex flex-row justify-between space-x-5">
               { currentColors.map((item) => 
                 <button
                   key={item}
-                  className="py-2 px-4 shadow-md rounded-lg border border-gray-300 font-semibold bg-stone-100 transition-colors hover:bg-gray-200"
+                  className="py-2 px-4 shadow-md rounded-lg border border-gray-300 font-semibold transition-all hover:shadow-xl"
                   onClick={(e) => testAnswer(e)}
                 >
                   {item}
